@@ -1,4 +1,4 @@
-import { type Position, parseUci, makeSquare } from 'chessops';
+import { type Position, parseSquare, parseUci, makeSquare } from 'chessops';
 import { chessgroundDests, lichessRules, scalachessCharPair } from 'chessops/compat';
 import { parseFen } from 'chessops/fen';
 import { setupPosition } from 'chessops/variant';
@@ -26,7 +26,31 @@ export const completeNode =
   };
 
 const computeDests = (position: PositionResult, chess960: boolean) =>
-  withPosition<Dests>(position, new Map(), p => chessgroundDests(p, { chess960 }));
+  withPosition<Dests>(position, new Map(), p => {
+    const dests = chessgroundDests(p, { chess960 });
+    // chessops <=0.15.0 RacingKings.dests lets a king move give a discovered check,
+    // which is illegal in Racing Kings. Prune those king dests. Safe to remove once
+    // chessops filters them upstream (this becomes a no-op). (lila #20898)
+    if (p.rules === 'racingkings') pruneRacingKingsKingChecks(p, dests);
+    return dests;
+  });
+
+// A Racing Kings king move that leaves the opponent in check (a discovered check) is
+// illegal. chessops omits this filter for king moves, so remove any such destination.
+const pruneRacingKingsKingChecks = (p: Position, dests: Dests): void => {
+  const king = p.board.kingOf(p.turn);
+  if (king === undefined) return;
+  const from = makeSquare(king);
+  const tos = dests.get(from);
+  if (!tos) return;
+  const legal = tos.filter(to => {
+    const after = p.clone();
+    after.play({ from: king, to: parseSquare(to)! });
+    return !after.isCheck();
+  });
+  if (legal.length) dests.set(from, legal);
+  else dests.delete(from);
+};
 
 const computeDrops = (variant: VariantKey, position: PositionResult): Key[] | undefined =>
   variant === 'crazyhouse'
