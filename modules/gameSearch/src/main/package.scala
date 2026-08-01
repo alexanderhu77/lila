@@ -32,7 +32,8 @@ extension (query: lila.search.spec.Query.Game)
       query.duration.nonEmpty ||
       query.analysed.nonEmpty ||
       query.clockInit.nonEmpty ||
-      query.clockInc.nonEmpty
+      query.clockInc.nonEmpty ||
+      query.chess960Pos.nonEmpty
 
   def userIds: Set[UserId] =
     Set(query.user1, query.user2, query.winner, query.loser, query.whiteUser, query.blackUser).flatten

@@ -48,6 +48,7 @@ final class GameSearchUi(helpers: Helpers)(
               f.aiLevel,
               source,
               f.perf,
+              f.chess960Pos,
               f.mode,
               f.turns,
               f.duration,
@@ -243,6 +244,12 @@ final class SearchForm(helpers: Helpers)(form: Form[?])(using Translate):
           "".some
         )
       )
+    )
+
+  def chess960Pos =
+    tr(
+      th(label(`for` := form3.id(form("chess960Pos")))(trans.site.startPosition())),
+      td(form3.input(form("chess960Pos"), typ = "number")(min := 0, max := 959))
     )
 
   def mode =

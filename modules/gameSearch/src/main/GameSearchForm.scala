@@ -42,6 +42,7 @@ final private[gameSearch] class GameSearchForm:
       "dateMax" -> GameSearchForm.dateField,
       "status" -> optional(numberIn(FormHelpers.statuses)),
       "analysed" -> optional(tolerantBoolean),
+      "chess960Pos" -> optional(number(min = 0, max = 959)),
       "sort" -> optional(
         mapping(
           "field" -> stringIn(Sorting.fields),
@@ -75,6 +76,7 @@ case class SearchData(
     dateMax: Option[LocalDate] = None,
     status: Option[Int] = None,
     analysed: Option[Boolean] = None,
+    chess960Pos: Option[Int] = None,
     sort: Option[SearchSort] = None
 ):
 
@@ -103,7 +105,8 @@ case class SearchData(
     blackUser = players.cleanBlack.map(_.value),
     sorting = SpecSorting(sortOrDefault.field, sortOrDefault.order),
     clockInit = clockInit,
-    clockInc = clockInc
+    clockInc = clockInc,
+    chess960Pos = chess960Pos
   )
 
   def transform(l: LocalDate): Timestamp = Timestamp(l.getYear, l.getMonthValue, l.getDayOfMonth)
